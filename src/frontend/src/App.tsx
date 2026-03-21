@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -10,259 +9,258 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import {
   ArrowRight,
+  ChevronDown,
   Minus,
   Plus,
   ShoppingBag,
-  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { toast } from "sonner";
-import {
-  Category,
-  useAddProduct,
-  useAddToCart,
-  useClearCart,
-  useGetAllProducts,
-  useGetCart,
-  useRemoveFromCart,
-  useUpdateCartItem,
-} from "./hooks/useQueries";
-import type { CartItem, Product } from "./hooks/useQueries";
 
-// Static seed products
-const SEED_PRODUCTS = [
+const Hero3D = lazy(() => import("./components/Hero3D"));
+const AboutScene3D = lazy(() => import("./components/AboutScene3D"));
+const ProductDetailPage = lazy(() => import("./components/ProductDetailPage"));
+
+// ─── Static Products ───────────────────────────────────────────────────────────
+const PRODUCTS = [
   {
-    name: "Classic White Tee",
+    id: 1,
+    name: "Gucci 9028 Sunglasses",
+    subtitle: "Gold Brown Frame",
+    price: 285,
+    category: "Eyewear",
+    image:
+      "/assets/uploads/Screenshot_2026-03-20-22-02-51-72_6012fa4d4ddec268fc5c7112cbb265e7-1.jpg",
     description:
-      "A timeless essential — ultra-soft cotton tee with a relaxed fit, perfect for any occasion.",
-    price: 29n,
-    category: Category.tops,
-    imageUrl: "https://picsum.photos/seed/classicwhitetee/400/500",
+      "Iconic Gucci craftsmanship meets contemporary edge. Gold-toned hardware with rich brown gradient lenses.",
   },
   {
-    name: "Striped Polo",
+    id: 2,
+    name: "Richard Mille WC-803",
+    subtitle: "Pink Titanium",
+    price: 4200,
+    category: "Watches",
+    image:
+      "/assets/uploads/Screenshot_2026-03-20-22-02-59-14_6012fa4d4ddec268fc5c7112cbb265e7-2.jpg",
     description:
-      "Bold horizontal stripes on a breathable piqué polo. Weekend-ready and effortlessly cool.",
-    price: 45n,
-    category: Category.tops,
-    imageUrl: "https://picsum.photos/seed/stripedpolo/400/500",
+      "An exquisite fusion of haute horlogerie and feminine elegance. Skeletonized movement in blush titanium.",
   },
   {
-    name: "Floral Blouse",
+    id: 3,
+    name: "G-Shock GST B100",
+    subtitle: "Black & Gold Edition",
+    price: 189,
+    category: "Watches",
+    image:
+      "/assets/uploads/Screenshot_2026-03-20-22-03-01-87_6012fa4d4ddec268fc5c7112cbb265e7-3.jpg",
     description:
-      "A breezy floral-print blouse with flutter sleeves. The kind of top that gets compliments.",
-    price: 55n,
-    category: Category.tops,
-    imageUrl: "https://picsum.photos/seed/floralblouse/400/500",
+      "Uncompromising toughness with refined aesthetics. Carbon core guard meets gold ion-plated hardware.",
   },
   {
-    name: "Slim Fit Jeans",
+    id: 4,
+    name: "Fossil Scarlette Watch",
+    subtitle: "Women's Analog",
+    price: 320,
+    category: "Watches",
+    image:
+      "/assets/uploads/Screenshot_2026-03-20-22-02-47-64_6012fa4d4ddec268fc5c7112cbb265e7-4.jpg",
     description:
-      "Mid-rise stretch denim with a slim cut. Moves with you from morning to midnight.",
-    price: 79n,
-    category: Category.bottoms,
-    imageUrl: "https://picsum.photos/seed/slimfitjeans/400/500",
+      "Delicate rose gold case with a mesh bracelet and sunray dial — effortless everyday luxury.",
   },
   {
-    name: "Pleated Skirt",
+    id: 5,
+    name: "Onitsuka Tiger Mexico 66",
+    subtitle: "Cream & Khaki",
+    price: 160,
+    category: "Footwear",
+    image:
+      "/assets/uploads/Screenshot_2026-03-20-22-03-06-28_6012fa4d4ddec268fc5c7112cbb265e7-5.jpg",
     description:
-      "Flowing pleated midi skirt in rich fabric. Pairs beautifully with everything in your wardrobe.",
-    price: 65n,
-    category: Category.bottoms,
-    imageUrl: "https://picsum.photos/seed/pleatedskirt/400/500",
+      "A heritage silhouette reborn. Clean cream leather with earthy khaki accents, born in 1966.",
   },
   {
-    name: "Cargo Shorts",
+    id: 6,
+    name: "Luminor Panerai GMT",
+    subtitle: "Luna-Rossa Edition",
+    price: 3800,
+    category: "Watches",
+    image:
+      "/assets/uploads/Screenshot_2026-03-20-22-02-45-02_6012fa4d4ddec268fc5c7112cbb265e7-6.jpg",
     description:
-      "Relaxed-fit cargo shorts with zippered pockets. Built for adventure, styled for the city.",
-    price: 49n,
-    category: Category.bottoms,
-    imageUrl: "https://picsum.photos/seed/cargoshorts/400/500",
-  },
-  {
-    name: "Leather Belt",
-    description:
-      "Full-grain leather belt with a brushed silver buckle. The finishing touch every outfit needs.",
-    price: 35n,
-    category: Category.accessories,
-    imageUrl: "https://picsum.photos/seed/leatherbelt/400/500",
-  },
-  {
-    name: "Canvas Tote Bag",
-    description:
-      "Heavy-duty waxed canvas tote with interior pockets. Stylish enough for brunch, sturdy enough for the market.",
-    price: 40n,
-    category: Category.accessories,
-    imageUrl: "https://picsum.photos/seed/canvastote/400/500",
-  },
-  {
-    name: "Silk Scarf",
-    description:
-      "Hand-rolled edges on pure silk twill. A luxurious accent for any season, any look.",
-    price: 60n,
-    category: Category.accessories,
-    imageUrl: "https://picsum.photos/seed/silkscarf/400/500",
+      "Born from a sailing legend. Cushion case in polished steel with GMT complication and red accents.",
   },
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  tops: "bg-primary/10 text-primary border-primary/20",
-  bottoms: "bg-secondary/20 text-secondary-foreground border-secondary/30",
-  accessories: "bg-accent/30 text-accent-foreground border-accent/40",
-};
+type CartItem = { productId: number; quantity: number };
+type Product = (typeof PRODUCTS)[0];
 
-const CATEGORY_LABEL: Record<string, string> = {
-  tops: "Tops",
-  bottoms: "Bottoms",
-  accessories: "Accessories",
-};
-
-type FilterTab = "all" | Category;
-
-function formatPrice(price: bigint) {
-  return `$${Number(price)}`;
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+  }).format(price);
 }
 
+// ─── Product Card ──────────────────────────────────────────────────────────────
 function ProductCard({
   product,
   index,
-  onAddToCart,
-}: { product: Product; index: number; onAddToCart: (id: bigint) => void }) {
-  const [adding, setAdding] = useState(false);
-
-  async function handleAdd() {
-    setAdding(true);
-    await onAddToCart(product.id);
-    setAdding(false);
-  }
-
+  onAdd,
+  onSelect,
+}: {
+  product: Product;
+  index: number;
+  onAdd: (id: number) => void;
+  onSelect: (product: Product) => void;
+}) {
   return (
-    <motion.div
+    <motion.article
       data-ocid={`product.item.${index}`}
-      className="product-card bg-card rounded-2xl overflow-hidden shadow-card border border-border group"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06 }}
+      className="product-card bg-card border border-border overflow-hidden group"
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{
+        duration: 0.6,
+        delay: index * 0.08,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
     >
-      <div className="relative overflow-hidden aspect-[4/5]">
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <span
-          className={`absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full border ${CATEGORY_COLORS[product.category]}`}
+      {/* Clickable body */}
+      <button
+        type="button"
+        className="w-full text-left cursor-pointer"
+        onClick={() => onSelect(product)}
+      >
+        {/* Image */}
+        <div
+          className="relative overflow-hidden"
+          style={{ aspectRatio: "4/5" }}
         >
-          {CATEGORY_LABEL[product.category]}
-        </span>
-      </div>
-      <div className="p-4">
-        <h3 className="font-display font-700 text-base leading-snug mb-1">
-          {product.name}
-        </h3>
-        <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 mb-3">
-          {product.description}
-        </p>
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-display font-800 text-xl text-primary">
-            {formatPrice(product.price)}
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          {/* 3D view hint on hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <span className="bg-background/80 backdrop-blur-sm border border-primary/40 text-primary text-xs tracking-widest uppercase font-body px-4 py-2">
+              View in 3D
+            </span>
+          </div>
+          <span className="absolute top-4 left-4 text-xs tracking-widest uppercase font-body font-medium px-3 py-1 border border-primary/40 text-primary bg-background/60 backdrop-blur-sm">
+            {product.category}
           </span>
-          <Button
-            data-ocid={`product.add_button.${index}`}
-            size="sm"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-xs font-semibold px-4"
-            onClick={handleAdd}
-            disabled={adding}
-          >
-            {adding ? (
-              <span className="inline-flex items-center gap-1">
-                <span className="w-3 h-3 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
-                Adding
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1">
-                <Plus className="w-3 h-3" />
-                Add to Cart
-              </span>
-            )}
-          </Button>
         </div>
+
+        {/* Info */}
+        <div className="p-5 pb-3">
+          <p className="text-muted-foreground text-xs tracking-widest uppercase font-body mb-1">
+            {product.subtitle}
+          </p>
+          <h3 className="font-display text-lg leading-snug mb-2 text-foreground">
+            {product.name}
+          </h3>
+          <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2 mb-2 font-body">
+            {product.description}
+          </p>
+        </div>
+      </button>
+
+      {/* Price + Add (outside clickable body) */}
+      <div className="px-5 pb-5 flex items-center justify-between gap-3">
+        <span className="font-display text-xl text-primary">
+          {formatPrice(product.price)}
+        </span>
+        <button
+          type="button"
+          data-ocid={`product.add_button.${index}`}
+          className="group/btn relative overflow-hidden border border-primary/60 text-primary px-4 py-2 text-xs tracking-widest uppercase font-body font-medium transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:border-primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd(product.id);
+          }}
+        >
+          Add to Cart
+        </button>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
 
+// ─── Cart Item Row ─────────────────────────────────────────────────────────────
 function CartItemRow({
   item,
-  product,
   index,
   onUpdate,
   onRemove,
 }: {
   item: CartItem;
-  product: Product | undefined;
   index: number;
-  onUpdate: (id: bigint, qty: bigint) => void;
-  onRemove: (id: bigint) => void;
+  onUpdate: (id: number, qty: number) => void;
+  onRemove: (id: number) => void;
 }) {
+  const product = PRODUCTS.find((p) => p.id === item.productId);
   if (!product) return null;
-  const qty = Number(item.quantity);
 
   return (
     <div
       data-ocid={`cart.item.${index}`}
-      className="cart-item flex gap-3 p-3 rounded-xl transition-colors"
+      className="flex gap-4 py-4 border-b border-border last:border-0"
     >
       <img
-        src={product.imageUrl}
+        src={product.image}
         alt={product.name}
-        className="w-16 h-20 object-cover rounded-lg flex-shrink-0"
+        className="w-16 h-20 object-cover flex-shrink-0"
       />
       <div className="flex-1 min-w-0">
-        <p className="font-display font-600 text-sm leading-snug">
+        <p className="font-display text-sm leading-snug text-foreground mb-0.5">
           {product.name}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {formatPrice(product.price)} each
+        <p className="text-xs text-muted-foreground font-body mb-3">
+          {formatPrice(product.price)}
         </p>
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              className="w-6 h-6 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center"
+              className="w-6 h-6 border border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
               onClick={() =>
-                qty > 1
-                  ? onUpdate(item.productId, BigInt(qty - 1))
+                item.quantity > 1
+                  ? onUpdate(item.productId, item.quantity - 1)
                   : onRemove(item.productId)
               }
             >
               <Minus className="w-3 h-3" />
             </button>
-            <span className="w-7 text-center text-sm font-semibold">{qty}</span>
+            <span className="w-6 text-center text-sm font-body">
+              {item.quantity}
+            </span>
             <button
               type="button"
-              className="w-6 h-6 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center"
-              onClick={() => onUpdate(item.productId, BigInt(qty + 1))}
+              className="w-6 h-6 border border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+              onClick={() => onUpdate(item.productId, item.quantity + 1)}
             >
               <Plus className="w-3 h-3" />
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-display font-700 text-sm text-primary">
-              {formatPrice(product.price * BigInt(qty))}
+          <div className="flex items-center gap-3">
+            <span className="font-display text-sm text-primary">
+              {formatPrice(product.price * item.quantity)}
             </span>
             <button
               type="button"
               data-ocid={`cart.delete_button.${index}`}
-              className="w-6 h-6 rounded-full bg-destructive/10 hover:bg-destructive hover:text-destructive-foreground text-destructive transition-colors flex items-center justify-center"
+              className="text-muted-foreground hover:text-destructive transition-colors"
               onClick={() => onRemove(item.productId)}
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -271,192 +269,249 @@ function CartItemRow({
   );
 }
 
+// ─── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
-  const seeded = useRef(false);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const { data: products = [] } = useGetAllProducts();
-  const { data: cartItems = [] } = useGetCart();
-  const addProduct = useAddProduct();
-  const addToCart = useAddToCart();
-  const updateCartItem = useUpdateCartItem();
-  const removeFromCart = useRemoveFromCart();
-  const clearCart = useClearCart();
-
-  // Seed products on first load if backend is empty
-  useEffect(() => {
-    if (seeded.current) return;
-    if (products.length === 0 && addProduct.status !== "pending") {
-      seeded.current = true;
-      Promise.all(
-        SEED_PRODUCTS.map((p) => addProduct.mutateAsync(p).catch(() => {})),
-      ).catch(() => {});
-    }
-  }, [products.length, addProduct]);
-
-  // Use seed products as fallback while backend loads
-  const displayProducts: Product[] =
-    products.length > 0
-      ? products
-      : SEED_PRODUCTS.map((p, i) => ({ ...p, id: BigInt(i + 1) }));
-
-  const filteredProducts =
-    activeTab === "all"
-      ? displayProducts
-      : displayProducts.filter((p) => p.category === activeTab);
-
-  const cartCount = cartItems.reduce(
-    (acc, item) => acc + Number(item.quantity),
-    0,
-  );
-
-  const subtotal = cartItems.reduce((acc, item) => {
-    const product = displayProducts.find((p) => p.id === item.productId);
-    return acc + (product ? Number(product.price) * Number(item.quantity) : 0);
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+  const subtotal = cart.reduce((s, i) => {
+    const p = PRODUCTS.find((x) => x.id === i.productId);
+    return s + (p ? p.price * i.quantity : 0);
   }, 0);
 
-  async function handleAddToCart(productId: bigint) {
-    const existing = cartItems.find((i) => i.productId === productId);
-    try {
-      if (existing) {
-        await updateCartItem.mutateAsync({
-          productId,
-          quantity: existing.quantity + 1n,
-        });
-      } else {
-        await addToCart.mutateAsync({ productId, quantity: 1n });
-      }
-      toast.success("Added to cart!", {
-        description: "Item added to your bag.",
-      });
-    } catch {
-      toast.error("Failed to add to cart");
-    }
-  }
-
-  async function handleUpdateQty(productId: bigint, quantity: bigint) {
-    try {
-      await updateCartItem.mutateAsync({ productId, quantity });
-    } catch {
-      toast.error("Failed to update cart");
-    }
-  }
-
-  async function handleRemove(productId: bigint) {
-    try {
-      await removeFromCart.mutateAsync(productId);
-      toast.success("Removed from cart");
-    } catch {
-      toast.error("Failed to remove item");
-    }
-  }
-
-  const TABS: { value: FilterTab; label: string; ocid: string }[] = [
-    { value: "all", label: "All Items", ocid: "nav.tab.1" },
-    { value: Category.tops, label: "Tops", ocid: "nav.tab.2" },
-    { value: Category.bottoms, label: "Bottoms", ocid: "nav.tab.3" },
-    { value: Category.accessories, label: "Accessories", ocid: "nav.tab.4" },
+  const categories = [
+    "All",
+    ...Array.from(new Set(PRODUCTS.map((p) => p.category))),
   ];
+  const filtered =
+    activeFilter === "All"
+      ? PRODUCTS
+      : PRODUCTS.filter((p) => p.category === activeFilter);
+
+  function addToCart(productId: number) {
+    setCart((prev) => {
+      const existing = prev.find((i) => i.productId === productId);
+      if (existing) {
+        return prev.map((i) =>
+          i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i,
+        );
+      }
+      return [...prev, { productId, quantity: 1 }];
+    });
+    const product = PRODUCTS.find((p) => p.id === productId);
+    toast.success("Added to cart", { description: product?.name });
+  }
+
+  function updateQty(productId: number, qty: number) {
+    setCart((prev) =>
+      prev.map((i) =>
+        i.productId === productId ? { ...i, quantity: qty } : i,
+      ),
+    );
+  }
+
+  function removeItem(productId: number) {
+    setCart((prev) => prev.filter((i) => i.productId !== productId));
+    toast("Item removed");
+  }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Toaster />
+    <div className="min-h-screen bg-background text-foreground">
+      <Toaster
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: "oklch(0.10 0.005 60)",
+            border: "1px solid oklch(0.22 0.02 75)",
+            color: "oklch(0.95 0.015 80)",
+          },
+        }}
+      />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border">
-        <div className="container max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="font-display font-800 text-lg tracking-tight">
-              Threads&nbsp;&amp;&nbsp;Trends
-            </span>
-          </div>
+      {/* ── Sticky Header ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <a
+            href="/"
+            data-ocid="nav.link"
+            className="font-display text-xl tracking-[0.15em] uppercase text-primary"
+          >
+            The Vault Co
+          </a>
+
+          {/* Nav Links */}
+          <nav className="hidden md:flex items-center gap-8">
+            {["Collection", "About", "Contact"].map((link) => (
+              <a
+                key={link}
+                href={`#${link.toLowerCase()}`}
+                data-ocid={"nav.link"}
+                className="text-xs tracking-widest uppercase font-body text-muted-foreground hover:text-primary transition-colors duration-300"
+              >
+                {link}
+              </a>
+            ))}
+          </nav>
+
+          {/* Cart */}
           <button
             type="button"
             data-ocid="nav.cart_button"
-            className="relative flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-semibold text-sm hover:bg-primary/90 transition-colors"
+            className="relative flex items-center gap-2 text-foreground hover:text-primary transition-colors"
             onClick={() => setCartOpen(true)}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span className="hidden sm:inline">My Bag</span>
-            {cartCount > 0 && (
-              <motion.span
-                key={cartCount}
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="absolute -top-2 -right-2 bg-accent text-accent-foreground text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
-              >
-                {cartCount}
-              </motion.span>
-            )}
+            <ShoppingBag className="w-5 h-5" />
+            <AnimatePresence>
+              {cartCount > 0 && (
+                <motion.span
+                  key={cartCount}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center font-body"
+                >
+                  {cartCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
         </div>
       </header>
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="relative h-[420px] sm:h-[500px]">
-            <img
-              src="/assets/generated/hero-fashion.dim_1600x600.jpg"
-              alt="Threads & Trends hero"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/30 to-transparent" />
-            <div className="absolute inset-0 flex items-center">
-              <div className="container max-w-7xl mx-auto px-4">
-                <motion.div
-                  initial={{ opacity: 0, x: -40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.7, ease: "easeOut" }}
-                  className="max-w-xl"
-                >
-                  <p className="text-primary font-semibold text-sm uppercase tracking-widest mb-2">
-                    New Season Collection
-                  </p>
-                  <h1 className="font-display font-800 text-4xl sm:text-6xl text-white leading-[1.05] mb-4">
-                    Dress Bold.
-                    <br />
-                    Live Bright.
-                  </h1>
-                  <p className="text-white/80 text-base sm:text-lg mb-6 leading-relaxed">
-                    Clothing and accessories that celebrate color, confidence,
-                    and self-expression.
-                  </p>
-                  <Button
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-6 py-3 font-bold text-base"
-                    onClick={() =>
-                      document
-                        .getElementById("shop")
-                        ?.scrollIntoView({ behavior: "smooth" })
-                    }
-                  >
-                    Shop the Collection <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </section>
+      {/* ── Hero Section ── */}
+      <section
+        className="relative h-screen flex items-center justify-center overflow-hidden"
+        style={{ background: "oklch(0.06 0.005 60)" }}
+      >
+        {/* 3D Canvas */}
+        <div className="absolute inset-0">
+          <Suspense fallback={null}>
+            <Hero3D />
+          </Suspense>
+        </div>
 
-        {/* Shop Section */}
-        <section id="shop" className="container max-w-7xl mx-auto px-4 py-12">
-          {/* Category Tabs */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {TABS.map((tab) => (
+        {/* Radial vignette */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, oklch(0.06 0.005 60) 100%)",
+          }}
+        />
+
+        {/* Hero Text */}
+        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
+          <motion.p
+            initial={{ opacity: 0, letterSpacing: "0.5em" }}
+            animate={{ opacity: 1, letterSpacing: "0.25em" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="text-primary text-xs tracking-[0.4em] uppercase font-body mb-6"
+          >
+            Curated Luxury
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 1,
+              delay: 0.3,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+            className="font-display text-5xl sm:text-7xl md:text-8xl leading-[0.95] mb-6"
+          >
+            <span className="gold-shimmer">THE VAULT CO</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.7 }}
+            className="text-muted-foreground text-sm tracking-widest uppercase font-body mb-10"
+          >
+            Curated Luxury. Elevated Style.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.0 }}
+          >
+            <button
+              type="button"
+              data-ocid="hero.primary_button"
+              className="group inline-flex items-center gap-3 border border-primary/60 text-primary px-8 py-4 text-xs tracking-widest uppercase font-body font-medium transition-all duration-500 hover:bg-primary hover:text-primary-foreground hover:gap-5"
+              onClick={() =>
+                document
+                  .getElementById("collection")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
+            >
+              Explore Collection
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Scroll hint */}
+        <motion.div
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+        >
+          <span className="text-xs tracking-widest uppercase font-body">
+            Scroll
+          </span>
+          <motion.div
+            animate={{ y: [0, 6, 0] }}
+            transition={{
+              repeat: Number.POSITIVE_INFINITY,
+              duration: 1.8,
+              ease: "easeInOut",
+            }}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ── Collection Section ── */}
+      <section id="collection" className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <p className="text-primary text-xs tracking-[0.4em] uppercase font-body mb-4">
+              The Collection
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl text-foreground mb-4">
+              Vault Exclusives
+            </h2>
+            <div className="w-16 h-px bg-primary mx-auto" />
+          </motion.div>
+
+          {/* Filter Tabs */}
+          <div className="flex flex-wrap justify-center gap-3 mb-12">
+            {categories.map((cat) => (
               <button
+                key={cat}
                 type="button"
-                key={tab.value}
-                data-ocid={tab.ocid}
-                onClick={() => setActiveTab(tab.value)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${
-                  activeTab === tab.value
-                    ? "bg-primary text-primary-foreground border-primary shadow-md"
-                    : "bg-card text-foreground border-border hover:border-primary/40 hover:bg-primary/5"
+                data-ocid={"collection.tab"}
+                onClick={() => setActiveFilter(cat)}
+                className={`px-5 py-2 text-xs tracking-widest uppercase font-body transition-all duration-300 border ${
+                  activeFilter === cat
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
                 }`}
               >
-                {tab.label}
+                {cat}
               </button>
             ))}
           </div>
@@ -464,69 +519,176 @@ export default function App() {
           {/* Product Grid */}
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
+              key={activeFilter}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              transition={{ duration: 0.3 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border"
             >
-              {filteredProducts.map((product, i) => (
-                <ProductCard
-                  key={String(product.id)}
-                  product={product}
-                  index={i + 1}
-                  onAddToCart={handleAddToCart}
-                />
+              {filtered.map((product, i) => (
+                <div key={product.id} className="bg-background">
+                  <ProductCard
+                    product={product}
+                    index={i + 1}
+                    onAdd={addToCart}
+                    onSelect={setSelectedProduct}
+                  />
+                </div>
               ))}
             </motion.div>
           </AnimatePresence>
+        </div>
+      </section>
 
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-24 text-muted-foreground">
-              <p className="font-display text-xl">
-                No items in this category yet.
+      {/* ── About Section ── */}
+      <section id="about" className="relative py-32 overflow-hidden">
+        {/* 3D background */}
+        <div className="absolute inset-0 opacity-40">
+          <Suspense fallback={null}>
+            <AboutScene3D />
+          </Suspense>
+        </div>
+
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/70 to-background" />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1 }}
+          >
+            <p className="text-primary text-xs tracking-[0.4em] uppercase font-body mb-6">
+              Our Philosophy
+            </p>
+            <h2 className="font-display text-4xl md:text-6xl text-foreground mb-8 leading-tight">
+              The Vault
+              <br />
+              <em className="italic text-primary">Philosophy</em>
+            </h2>
+            <div className="w-16 h-px bg-primary mx-auto mb-10" />
+            <p className="text-muted-foreground leading-loose font-body text-base md:text-lg mb-6">
+              At TheVaultCo, we believe luxury is not a price tag — it is a
+              feeling. Every piece in our curated collection is selected for its
+              exceptional craftsmanship, timeless design, and the story it
+              carries.
+            </p>
+            <p className="text-muted-foreground leading-loose font-body text-base md:text-lg mb-10">
+              We partner with the world's most distinguished maisons and
+              independent artisans to bring you access to objects of true
+              desire. From statement timepieces to refined footwear — The Vault
+              is where elevated style begins.
+            </p>
+            <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto">
+              {[
+                { value: "6+", label: "Iconic Brands" },
+                { value: "100%", label: "Authenticated" },
+                { value: "∞", label: "Timeless" },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <p className="font-display text-3xl text-primary mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs tracking-widest uppercase text-muted-foreground font-body">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Contact Section ── */}
+      <section id="contact" className="py-24 px-6 border-t border-border">
+        <div className="max-w-2xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <p className="text-primary text-xs tracking-[0.4em] uppercase font-body mb-4">
+              Get In Touch
+            </p>
+            <h2 className="font-display text-4xl text-foreground mb-4">
+              Private Clientele
+            </h2>
+            <div className="w-16 h-px bg-primary mx-auto mb-8" />
+            <p className="text-muted-foreground font-body leading-relaxed mb-8">
+              For bespoke styling, private viewings, or exclusive acquisitions,
+              our dedicated concierge team is at your service.
+            </p>
+            <a
+              href="mailto:hello@thevaultco.com"
+              data-ocid="contact.link"
+              className="inline-flex items-center gap-3 border border-primary/60 text-primary px-8 py-4 text-xs tracking-widest uppercase font-body font-medium transition-all duration-500 hover:bg-primary hover:text-primary-foreground"
+            >
+              hello@thevaultco.com
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-border py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <p className="font-display text-2xl tracking-[0.15em] uppercase text-primary mb-1">
+                The Vault Co
+              </p>
+              <p className="text-xs tracking-widest text-muted-foreground font-body uppercase">
+                Curated Luxury. Elevated Style.
               </p>
             </div>
-          )}
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-border bg-card py-8">
-        <div className="container max-w-7xl mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="font-display font-600 text-base mb-1">
-            Threads &amp; Trends
-          </p>
-          <p>Your everyday destination for bold, beautiful fashion.</p>
-          <p className="mt-4">
-            © {new Date().getFullYear()}. Built with ❤️ using{" "}
-            <a
-              href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(typeof window !== "undefined" ? window.location.hostname : "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              caffeine.ai
-            </a>
-          </p>
+            <nav className="flex items-center gap-8">
+              {["Collection", "About", "Contact"].map((link) => (
+                <a
+                  key={link}
+                  href={`#${link.toLowerCase()}`}
+                  className="text-xs tracking-widest uppercase font-body text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {link}
+                </a>
+              ))}
+            </nav>
+          </div>
+          <Separator className="my-8 bg-border" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground font-body">
+            <p>© {new Date().getFullYear()} TheVaultCo. All rights reserved.</p>
+            <p>
+              Built with ♥ using{" "}
+              <a
+                href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                caffeine.ai
+              </a>
+            </p>
+          </div>
         </div>
       </footer>
 
-      {/* Cart Sheet */}
+      {/* ── Cart Sheet ── */}
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent
           data-ocid="cart.sheet"
           side="right"
-          className="w-full sm:max-w-md flex flex-col p-0"
+          className="w-full sm:max-w-md flex flex-col p-0 bg-card border-l border-border"
         >
-          <SheetHeader className="px-5 pt-5 pb-4 border-b border-border">
+          <SheetHeader className="px-6 pt-6 pb-5 border-b border-border">
             <div className="flex items-center justify-between">
-              <SheetTitle className="font-display font-800 text-lg flex items-center gap-2">
+              <SheetTitle className="font-display text-lg text-foreground flex items-center gap-3">
                 <ShoppingBag className="w-5 h-5 text-primary" />
-                My Bag{" "}
+                Your Cart
                 {cartCount > 0 && (
-                  <Badge className="bg-primary text-primary-foreground">
+                  <Badge className="bg-primary/20 text-primary border border-primary/30 font-body text-xs">
                     {cartCount}
                   </Badge>
                 )}
@@ -535,74 +697,99 @@ export default function App() {
                 type="button"
                 data-ocid="cart.close_button"
                 onClick={() => setCartOpen(false)}
-                className="w-8 h-8 rounded-full bg-muted hover:bg-muted-foreground/20 flex items-center justify-center transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-5 py-4">
-            {cartItems.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="font-display text-lg">Your bag is empty</p>
-                <p className="text-sm mt-1">Add some items to get started!</p>
-                <Button
-                  className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl"
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            {cart.length === 0 ? (
+              <div
+                data-ocid="cart.empty_state"
+                className="flex flex-col items-center justify-center h-full py-24 text-center"
+              >
+                <ShoppingBag className="w-12 h-12 text-muted mb-4 opacity-30" />
+                <p className="font-display text-lg text-foreground mb-2">
+                  Your cart is empty
+                </p>
+                <p className="text-xs text-muted-foreground font-body tracking-wider uppercase mb-6">
+                  Discover our collection
+                </p>
+                <button
+                  type="button"
+                  className="border border-primary/60 text-primary px-6 py-3 text-xs tracking-widest uppercase font-body hover:bg-primary hover:text-primary-foreground transition-all duration-300"
                   onClick={() => setCartOpen(false)}
                 >
-                  Continue Shopping
-                </Button>
+                  Browse Collection
+                </button>
               </div>
             ) : (
-              <div className="space-y-1">
-                {cartItems.map((item, i) => (
+              <div>
+                {cart.map((item, i) => (
                   <CartItemRow
-                    key={String(item.productId)}
+                    key={item.productId}
                     item={item}
-                    product={displayProducts.find(
-                      (p) => p.id === item.productId,
-                    )}
                     index={i + 1}
-                    onUpdate={handleUpdateQty}
-                    onRemove={handleRemove}
+                    onUpdate={updateQty}
+                    onRemove={removeItem}
                   />
                 ))}
               </div>
             )}
           </div>
 
-          {cartItems.length > 0 && (
-            <div className="px-5 pb-6 pt-4 border-t border-border space-y-4">
+          {cart.length > 0 && (
+            <div className="px-6 pb-8 pt-5 border-t border-border space-y-5">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Subtotal</span>
-                <span className="font-display font-800 text-2xl text-primary">
-                  ${subtotal}
+                <span className="text-xs tracking-widest uppercase text-muted-foreground font-body">
+                  Subtotal
+                </span>
+                <span className="font-display text-2xl text-primary">
+                  {formatPrice(subtotal)}
                 </span>
               </div>
-              <Separator />
-              <div className="space-y-2">
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-bold text-base py-5">
-                  Checkout <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl text-sm"
-                  onClick={() =>
-                    clearCart
-                      .mutateAsync()
-                      .then(() => toast.success("Cart cleared"))
-                      .catch(() => {})
-                  }
-                >
-                  Clear bag
-                </Button>
-              </div>
+              <p className="text-xs text-muted-foreground font-body">
+                Shipping and taxes calculated at checkout.
+              </p>
+              <button
+                type="button"
+                data-ocid="cart.submit_button"
+                className="w-full bg-primary text-primary-foreground py-4 text-xs tracking-widest uppercase font-body font-medium flex items-center justify-center gap-3 hover:bg-primary/90 transition-colors"
+                onClick={() => toast.success("Proceeding to checkout…")}
+              >
+                Proceed to Checkout
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                data-ocid="cart.delete_button"
+                className="w-full py-3 text-xs tracking-widest uppercase font-body text-muted-foreground hover:text-destructive transition-colors"
+                onClick={() => {
+                  setCart([]);
+                  toast("Cart cleared");
+                }}
+              >
+                Clear Cart
+              </button>
             </div>
           )}
         </SheetContent>
       </Sheet>
+
+      {/* ── Product Detail 3D Overlay ── */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <Suspense fallback={null}>
+            <ProductDetailPage
+              product={selectedProduct}
+              onClose={() => setSelectedProduct(null)}
+              onAdd={addToCart}
+            />
+          </Suspense>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

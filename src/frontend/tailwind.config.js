@@ -16,8 +16,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Bricolage Grotesque", "sans-serif"],
-        body: ["Figtree", "sans-serif"],
+        display: ["Aerosoldier", "Georgia", "serif"],
+        body: ["Aerosoldier", "General Sans", "system-ui", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",
@@ -78,7 +78,8 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        card: "0 4px 24px oklch(0.18 0.03 300 / 0.08)",
+        gold: "0 0 30px oklch(0.72 0.12 75 / 0.2), 0 4px 24px oklch(0 0 0 / 0.4)",
+        "gold-lg": "0 0 60px oklch(0.72 0.12 75 / 0.25), 0 20px 60px oklch(0 0 0 / 0.5)",
       },
       keyframes: {
         "accordion-down": {
@@ -90,14 +91,19 @@ export default {
           to: { height: "0" },
         },
         "fade-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
+          from: { opacity: "0", transform: "translateY(24px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-up": "fade-up 0.5s ease-out forwards",
+        "fade-up": "fade-up 0.8s ease-out forwards",
+        "fade-in": "fade-in 1.2s ease-out forwards",
       },
     },
   },

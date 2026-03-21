@@ -1,14 +1,9 @@
-@font-face {
-  font-family: "Bricolage Grotesque";
-  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
-  font-weight: 200 800;
-  font-display: swap;
-}
+@import url("https://fonts.cdnfonts.com/css/aerosoldier");
 
 @font-face {
-  font-family: "Figtree";
-  src: url("/assets/fonts/Figtree.woff2") format("woff2");
-  font-weight: 300 900;
+  font-family: "General Sans";
+  src: url("/assets/fonts/GeneralSans.woff2") format("woff2");
+  font-weight: 200 700;
   font-display: swap;
 }
 
@@ -18,58 +13,62 @@
 
 @layer base {
   :root {
-    /* Vibrant fashion palette — light mode */
-    --background: 0.99 0.002 90;
-    --foreground: 0.18 0.03 300;
+    /* TheVaultCo — near-black luxury dark palette */
+    --background: 0.06 0.005 60;
+    --foreground: 0.95 0.015 80;
 
-    --card: 1 0 0;
-    --card-foreground: 0.18 0.03 300;
+    --card: 0.1 0.005 60;
+    --card-foreground: 0.95 0.015 80;
 
-    --popover: 1 0 0;
-    --popover-foreground: 0.18 0.03 300;
+    --popover: 0.1 0.005 60;
+    --popover-foreground: 0.95 0.015 80;
 
-    /* Hot pink primary */
-    --primary: 0.58 0.22 355;
-    --primary-foreground: 1 0 0;
+    /* Gold primary */
+    --primary: 0.72 0.12 75;
+    --primary-foreground: 0.06 0.005 60;
 
-    /* Teal secondary */
-    --secondary: 0.7 0.12 195;
-    --secondary-foreground: 0.15 0.04 200;
+    /* Dark charcoal secondary */
+    --secondary: 0.12 0.01 60;
+    --secondary-foreground: 0.95 0.015 80;
 
-    --muted: 0.96 0.005 300;
-    --muted-foreground: 0.55 0.02 300;
+    --muted: 0.3 0.01 60;
+    --muted-foreground: 0.55 0.02 70;
 
-    /* Yellow accent */
-    --accent: 0.88 0.16 95;
-    --accent-foreground: 0.2 0.05 90;
+    /* Subtle gold accent */
+    --accent: 0.18 0.02 75;
+    --accent-foreground: 0.95 0.015 80;
 
-    --destructive: 0.58 0.22 25;
-    --destructive-foreground: 1 0 0;
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.95 0.015 80;
 
-    --border: 0.9 0.01 300;
-    --input: 0.9 0.01 300;
-    --ring: 0.58 0.22 355;
+    /* Gold-tinted border */
+    --border: 0.22 0.02 75;
+    --input: 0.22 0.02 75;
+    --ring: 0.72 0.12 75;
 
-    --chart-1: 0.58 0.22 355;
-    --chart-2: 0.7 0.12 195;
-    --chart-3: 0.88 0.16 95;
-    --chart-4: 0.68 0.18 280;
-    --chart-5: 0.62 0.2 160;
+    --chart-1: 0.72 0.12 75;
+    --chart-2: 0.55 0.1 60;
+    --chart-3: 0.4 0.08 80;
+    --chart-4: 0.65 0.1 90;
+    --chart-5: 0.5 0.08 70;
 
-    --sidebar: 0.98 0.005 300;
-    --sidebar-foreground: 0.18 0.03 300;
-    --sidebar-primary: 0.58 0.22 355;
-    --sidebar-primary-foreground: 1 0 0;
-    --sidebar-accent: 0.96 0.01 300;
-    --sidebar-accent-foreground: 0.18 0.03 300;
-    --sidebar-border: 0.9 0.01 300;
-    --sidebar-ring: 0.58 0.22 355;
+    --sidebar: 0.08 0.005 60;
+    --sidebar-foreground: 0.95 0.015 80;
+    --sidebar-primary: 0.72 0.12 75;
+    --sidebar-primary-foreground: 0.06 0.005 60;
+    --sidebar-accent: 0.14 0.01 60;
+    --sidebar-accent-foreground: 0.95 0.015 80;
+    --sidebar-border: 0.22 0.02 75;
+    --sidebar-ring: 0.72 0.12 75;
 
-    --radius: 0.75rem;
+    --radius: 0.25rem;
   }
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   * {
     @apply border-border;
   }
@@ -87,16 +86,53 @@
   }
 }
 
-/* Cart item hover */
-.cart-item:hover {
-  @apply bg-muted/60;
-}
-
-/* Product card hover effect */
+/* Product card hover */
 .product-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow
+    0.4s ease, border-color 0.4s ease;
 }
 .product-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px oklch(0.58 0.22 355 / 0.18);
+  transform: translateY(-6px);
+  box-shadow: 0 0 40px oklch(0.72 0.12 75 / 0.18), 0 20px 60px
+    oklch(0 0 0 / 0.5);
+  border-color: oklch(0.72 0.12 75 / 0.5);
+}
+
+/* Gold shimmer line */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+.gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.72 0.12 75) 0%,
+    oklch(0.88 0.1 85) 50%,
+    oklch(0.72 0.12 75) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Subtle scanline texture */
+.scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    oklch(0 0 0 / 0.04) 2px,
+    oklch(0 0 0 / 0.04) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
 }
